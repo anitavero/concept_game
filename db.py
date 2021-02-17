@@ -4,9 +4,9 @@ Example:
 from datetime import timedelta
 import db
 
-g = db.Game.create(game_id=0, cluster=1, user1='100.100.100', user2='200.200.200', guess='PASS')
-a1 = db.Answer.create(game=g, user='100.100.100', word='apple', e_time=timedelta(seconds=3000, microseconds=10))
-a2 = db.Answer.create(game=g, user='200.200.200', word='river', e_time=timedelta(seconds=2000, microseconds=10))
+g = db.Game.create(game_id=0, user1='100.100.100', user2='200.200.200', guess='PASS')
+a1 = db.Answer.create(game=g, cluster_id='m1', user='100.100.100', word='apple', e_time=timedelta(seconds=3000, microseconds=10))
+a2 = db.Answer.create(game=g, cluster_id='m1', user='200.200.200', word='river', e_time=timedelta(seconds=2000, microseconds=10))
 for a in db.Answer.select().join(db.Game).where(db.Game.game_id == 0):
     print(a.user)
 > 100.100.100
@@ -21,8 +21,7 @@ from peewee import *
 db = SqliteDatabase('concept.db')
 
 class Game(Model):
-    game_id = IntegerField()
-    cluster = TextField()
+    game_id = TextField()
     user1 = TextField()
     user2 = TextField()
     guess = TextField()
@@ -33,6 +32,7 @@ class Game(Model):
 
 class Answer(Model):
     game = ForeignKeyField(Game, backref='answers')
+    cluster_id = TextField()
     user = TextField()
     word = TextField()
     e_time = TimeField()  # Elapsed Time

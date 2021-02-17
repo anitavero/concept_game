@@ -49,6 +49,7 @@ class GameSession():
     def __init__(self):
         self.players = {}
         self.session_state = GameSessionState.WAITING_FOR_PLAYERS
+        self.db_game = None
 
     async def _send_message_to_all_players(self, message):
         message_json = json.dumps(message)
@@ -74,6 +75,11 @@ class GameSession():
 
         if len(self.players)==2:
             self.session_state=GameSessionState.GUESSING
+            # Add current game to Game table
+            player_ids = list(self.players.keys())
+            game_id = list(SESSIONS.keys())[0]
+            self.db_game = db.Game.create(game_id=game_id, user1=player_ids[0], user2=player_ids[1], guess='')
+            # Send first puzzle
             puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
             await self._send_message_to_all_players(f"What's the concept for: {words}")
 
