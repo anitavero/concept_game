@@ -7,6 +7,7 @@ import json
 import logging
 import websockets
 from random import randint
+from datetime import datetime
 
 import enum
 
@@ -22,6 +23,7 @@ logging.basicConfig()
 
 
 SESSIONS = {}
+
 
 class GameSessionState(enum.Enum):
     WAITING_FOR_PLAYERS = 1
@@ -50,6 +52,9 @@ class GameSession():
         self.players = {}
         self.session_state = GameSessionState.WAITING_FOR_PLAYERS
         self.db_game = None
+        self.start_time = None
+        self.puzzle_id = None
+
 
     async def _send_message_to_all_players(self, message):
         message_json = json.dumps(message)
@@ -80,8 +85,9 @@ class GameSession():
             game_id = list(SESSIONS.keys())[0]
             self.db_game = db.Game.create(game_id=game_id, user1=player_ids[0], user2=player_ids[1], guess='')
             # Send first puzzle
-            puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
+            self.puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
             await self._send_message_to_all_players(f"What's the concept for: {words}")
+            self.start_time = datetime.now()
 
         return len(self.players)
 
@@ -97,16 +103,23 @@ class GameSession():
 
 
     async def add_guess(self, player_id, guess):
+        time = datetime.now()
         guess = guess.lower().strip()
+        elapsed_time = time - self.start_time
         self.players[player_id].guesses.add( guess )
+
+        print(self.puzzle_id, guess, elapsed_time)
+
+        a = db.Answer.create(game=self.db_game, cluster_id=self.puzzle_id, user=player_id, word=guess, e_time=elapsed_time)
 
         other_player_id = get_other_player_id(player_id)
 
         if guess in self.players[other_player_id].guesses:
             self.session_state = GameSessionState.WON
             await self._send_message_to_all_players(f"Matched with: {guess}")
-            puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
+            self.puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
             await self._send_message_to_all_players(f"What's the concept for: {words}")
+            self.start_time = datetime.now()
 
 
 

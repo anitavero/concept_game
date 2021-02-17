@@ -14,6 +14,7 @@ if __name__ == '__main__':
         with open(os.path.join(cf['datapath'], clfile), 'r') as f:
             cl_dict = json.load(f)
 
+        # TODO: load new cluster files, which don't need to be converted
         clusters = defaultdict(list)
         for w, c in cl_dict.items():
             clusters[int(c)].append(w)
