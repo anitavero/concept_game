@@ -6,8 +6,17 @@ import asyncio
 import json
 import logging
 import websockets
+from random import randint
 
 import enum
+
+import db
+
+PUZZLES = []
+for c in db.Cluster.select():
+    PUZZLES.append((c.cluster, c.words))
+N_PUZZLES = len(PUZZLES)
+
 
 logging.basicConfig()
 
@@ -65,8 +74,8 @@ class GameSession():
 
         if len(self.players)==2:
             self.session_state=GameSessionState.GUESSING
-
-            await self._send_message_to_all_players({"type": "start_session"})
+            puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
+            await self._send_message_to_all_players(f"What's the concept for: {words}")
 
         return len(self.players)
 
@@ -89,7 +98,9 @@ class GameSession():
 
         if guess in self.players[other_player_id].guesses:
             self.session_state = GameSessionState.WON
-            await self._send_message_to_all_players({"type": "match", "which_guess": guess})
+            await self._send_message_to_all_players(f"Matched with: {guess}")
+            puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
+            await self._send_message_to_all_players(f"What's the concept for: {words}")
 
 
 
