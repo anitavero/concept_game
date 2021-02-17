@@ -41,22 +41,24 @@
     </head>
     <body>
         <div class="buttons">
-            <div class="minus button">-</div>
+<!--            <div class="minus button">-</div>-->
             <div class="value">?</div>
             <textarea class="guesses" id="guesses" name="guesses"></textarea>
         </div>
-        <div class="state">
+        <br class="state">
+            Score: <span class="score">0</span></br></br>
             <span class="users">?</span> online
         </div>
         <script>
-            var minus = document.querySelector('.minus'),
+            // var minus = document.querySelector('.minus'),
                 value = document.querySelector('.value'),
                 users = document.querySelector('.users'),
+                score = document.querySelector('.score'),
                 guesses = document.querySelector('.guesses'),
                 websocket = new WebSocket("ws://127.0.0.1:6789/hehehahawhat");
-            minus.onclick = function (event) {
-                websocket.send(JSON.stringify({action: 'minus'}));
-            }
+            // minus.onclick = function (event) {
+            //     websocket.send(JSON.stringify({action: 'minus'}));
+            // }
             guesses.onkeyup = function (event) {
                 evt = event || window.event;
                 if (evt.keyCode == 13) {
@@ -70,10 +72,16 @@
                     case 'state':
                         value.textContent = data.value;
                         break;
+                    case 'match':
+                        guesses.value = '';
+                        break;
                     case 'users':
                         users.textContent = (
                             data.count.toString() + " user" +
                             (data.count == 1 ? "" : "s"));
+                        break;
+                    case 'score':
+                        score.textContent = data.score.toString();
                         break;
                     default:
                         console.error(

@@ -55,6 +55,7 @@ class GameSession():
         self.start_time = None
         self.puzzle_id = None
         self.words = []
+        self.score = 0
 
 
     async def _send_message_to_all_players(self, message):
@@ -85,6 +86,9 @@ class GameSession():
             player_ids = list(self.players.keys())
             game_id = list(SESSIONS.keys())[0]
             self.db_game = db.Game.create(game_id=game_id, user1=player_ids[0], user2=player_ids[1], guess='')
+
+            await self._send_message_to_all_players({"type": "users", "count": 2})
+
             # # Send first puzzle
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
             await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
@@ -117,16 +121,15 @@ class GameSession():
 
         if guess in self.players[other_player_id].guesses:
             self.session_state = GameSessionState.WON
-            await self._send_message_to_all_players(f"Matched with: {guess}")
+            await self._send_message_to_all_players({"type": "match"})
+            self.score += 1
+            await self._send_message_to_all_players({"type": "score", "score": self.score})
             self.db_game.guess = guess
             self.db_game.save()
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
             await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
             self.start_time = datetime.now()
 
-
-    def state_event(self):
-        return json.dumps({"type": "state", "value": f"What's the concept for: {self.words}"})
 
 
 
