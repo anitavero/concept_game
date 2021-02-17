@@ -22,6 +22,7 @@ db = SqliteDatabase('concept.db')
 
 class Game(Model):
     game_id = TextField()
+    cluster_id = TextField()
     user1 = TextField()
     user2 = TextField()
     guess = TextField()

@@ -53,9 +53,11 @@ class GameSession():
         self.session_state = GameSessionState.WAITING_FOR_PLAYERS
         self.db_game = None
         self.start_time = None
-        self.puzzle_id = None
+        self.puzzle_id = ''
         self.words = []
         self.score = 0
+        self.game_id = ''
+        self.player_ids = []
 
 
     async def _send_message_to_all_players(self, message):
@@ -83,14 +85,15 @@ class GameSession():
         if len(self.players)==2:
             self.session_state=GameSessionState.GUESSING
             # Add current game to Game table
-            player_ids = list(self.players.keys())
-            game_id = list(SESSIONS.keys())[0]
-            self.db_game = db.Game.create(game_id=game_id, user1=player_ids[0], user2=player_ids[1], guess='')
+            self.player_ids = list(self.players.keys())
+            self.game_id = list(SESSIONS.keys())[0]
 
             await self._send_message_to_all_players({"type": "users", "count": 2})
 
             # # Send first puzzle
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
+            self.db_game = db.Game.create(game_id=self.game_id, cluster_id=self.puzzle_id, user1=self.player_ids[0],
+                                          user2=self.player_ids[1], guess='')
             await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
             self.start_time = datetime.now()
 
@@ -115,6 +118,7 @@ class GameSession():
 
         print(self.puzzle_id, guess, elapsed_time)
 
+
         a = db.Answer.create(game=self.db_game, cluster_id=self.puzzle_id, user=player_id, word=guess, e_time=elapsed_time)
 
         other_player_id = get_other_player_id(player_id)
@@ -126,7 +130,13 @@ class GameSession():
             await self._send_message_to_all_players({"type": "score", "score": self.score})
             self.db_game.guess = guess
             self.db_game.save()
+
+            # New puzzle
+            for pid in self.players.keys():
+                self.players[pid].guesses = set()  # Clear guesses for new puzzle
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
+            self.db_game = db.Game.create(game_id=self.game_id, cluster_id=self.puzzle_id, user1=self.player_ids[0],
+                                          user2=self.player_ids[1], guess='')
             await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
             self.start_time = datetime.now()
 
