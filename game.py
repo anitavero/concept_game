@@ -118,7 +118,8 @@ class GameSession():
         if guess in self.players[other_player_id].guesses:
             self.session_state = GameSessionState.WON
             await self._send_message_to_all_players(f"Matched with: {guess}")
-            # TODO: save guess
+            self.db_game.guess = guess
+            self.db_game.save()
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
             await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
             self.start_time = datetime.now()
