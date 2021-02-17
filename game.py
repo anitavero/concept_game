@@ -54,6 +54,7 @@ class GameSession():
         self.db_game = None
         self.start_time = None
         self.puzzle_id = None
+        self.words = []
 
 
     async def _send_message_to_all_players(self, message):
@@ -84,9 +85,9 @@ class GameSession():
             player_ids = list(self.players.keys())
             game_id = list(SESSIONS.keys())[0]
             self.db_game = db.Game.create(game_id=game_id, user1=player_ids[0], user2=player_ids[1], guess='')
-            # Send first puzzle
-            self.puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
-            await self._send_message_to_all_players(f"What's the concept for: {words}")
+            # # Send first puzzle
+            self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
+            await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
             self.start_time = datetime.now()
 
         return len(self.players)
@@ -117,14 +118,14 @@ class GameSession():
         if guess in self.players[other_player_id].guesses:
             self.session_state = GameSessionState.WON
             await self._send_message_to_all_players(f"Matched with: {guess}")
-            self.puzzle_id, words = PUZZLES[randint(0, N_PUZZLES)]
-            await self._send_message_to_all_players(f"What's the concept for: {words}")
+            # TODO: save guess
+            self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
+            await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
             self.start_time = datetime.now()
 
 
-
-
-
+    def state_event(self):
+        return json.dumps({"type": "state", "value": f"What's the concept for: {self.words}"})
 
 
 
@@ -139,9 +140,10 @@ async def game(websocket, path):
 
     try:
         async for message in websocket:
+            print(message)
             data = json.loads(message)
             if data["action"] == "guess":
-                await game_session.add_guess(player_id, data["guess"])
+                await game_session.add_guess(player_id, data["guess"][-2])
             else:
                 logging.error("unsupported event: {}", data)
     except websockets.exceptions.ConnectionClosedError:
