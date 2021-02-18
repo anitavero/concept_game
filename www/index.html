@@ -11,6 +11,7 @@
                 font-size: 1em;
                 display: flex;
                 justify-content: center;
+                padding-top: 20px;
             }
             .button, .value {
                 line-height: 1;
@@ -30,6 +31,17 @@
             .guesses {
                 min-width: 2em;
             }
+            div#guess_title {
+                position: absolute;
+                right: 5px;
+                top: 0;
+            }
+            div#value_title {
+                position: absolute;
+                left: 5px;
+                top: 0;
+                bottom: 100px;
+            }
             .value {
                 min-width: 1em;
                 max-width: 30em;
@@ -40,8 +52,9 @@
         </style>
     </head>
     <body>
+        <div id="value_title">Guess the concept for these words:</div>
+        <div id="guess_title">Press ENTER to send guess</div>
         <div class="buttons">
-<!--            <div class="minus button">-</div>-->
             <div class="value">?</div>
             <textarea class="guesses" id="guesses" name="guesses"></textarea>
         </div>

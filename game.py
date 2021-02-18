@@ -94,7 +94,7 @@ class GameSession():
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
             self.db_game = db.Game.create(game_id=self.game_id, cluster_id=self.puzzle_id, user1=self.player_ids[0],
                                           user2=self.player_ids[1], guess='')
-            await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
+            await self._send_message_to_all_players({"type": "state", "value": f"{self.words}"})
             self.start_time = datetime.now()
 
         return len(self.players)
@@ -137,7 +137,7 @@ class GameSession():
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
             self.db_game = db.Game.create(game_id=self.game_id, cluster_id=self.puzzle_id, user1=self.player_ids[0],
                                           user2=self.player_ids[1], guess='')
-            await self._send_message_to_all_players({"type": "state", "value": f"What's the concept for: {self.words}"})
+            await self._send_message_to_all_players({"type": "state", "value": f"{self.words}"})
             self.start_time = datetime.now()
 
 
