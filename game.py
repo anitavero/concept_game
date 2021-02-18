@@ -86,7 +86,7 @@ class GameSession():
             self.session_state=GameSessionState.GUESSING
             # Add current game to Game table
             self.player_ids = list(self.players.keys())
-            self.game_id = list(SESSIONS.keys())[0]
+            self.game_id = list(SESSIONS.keys())[-1]
 
             await self._send_message_to_all_players({"type": "users", "count": 2})
 
