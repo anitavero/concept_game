@@ -9,6 +9,7 @@ import websockets
 from random import randint
 from datetime import datetime
 from collections import OrderedDict
+import uuid
 
 import enum
 
@@ -145,7 +146,15 @@ class GameSession():
 
 
 async def game(websocket, path):
-    session_id = path
+
+    # Create unique id for each game and increment GameSession ids.
+    if len(SESSIONS) == 0:
+        session_id = str(uuid.uuid1()) + '_0'
+    elif len(list(SESSIONS.values())[-1].players) < 2:
+        session_id = list(SESSIONS.keys())[-1]
+    else:
+        id, seq = list(SESSIONS.keys())[-1].split('_')
+        session_id = id + '_' + str(int(seq) + 1)
 
     if session_id not in SESSIONS:
         SESSIONS[session_id] = GameSession()
