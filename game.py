@@ -86,13 +86,12 @@ class GameSession():
 
         if len(self.players)==2:
             self.session_state=GameSessionState.GUESSING
-            # Add current game to Game table
             self.player_ids = list(self.players.keys())
             self.game_id = list(SESSIONS.keys())[-1]
 
             await self._send_message_to_all_players({"type": "users", "count": 2})
 
-            # TODO: save start time in a separate table
+            # TODO: save start_time in a separate table
 
             # Send first puzzle
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
@@ -168,7 +167,7 @@ async def game(websocket, path):
             print(message)
             data = json.loads(message)
             if data["action"] == "guess":
-                await game_session.add_guess(player_id, data["guess"][-2])
+                await game_session.add_guess(player_id, data["guess"][-2])  # TODO clear "" elements
             else:
                 logging.error("unsupported event: {}", data)
     except websockets.exceptions.ConnectionClosedError:
