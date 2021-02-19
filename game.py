@@ -147,14 +147,13 @@ class GameSession():
 
 async def game(websocket, path):
 
-    # Create unique id for each game and increment GameSession ids.
+    # Create unique id for each GameSession.
     if len(SESSIONS) == 0:
-        session_id = str(uuid.uuid1()) + '_0'
+        session_id = str(uuid.uuid1())
     elif len(list(SESSIONS.values())[-1].players) < 2:
         session_id = list(SESSIONS.keys())[-1]
     else:
-        id, seq = list(SESSIONS.keys())[-1].split('_')
-        session_id = id + '_' + str(int(seq) + 1)
+        session_id = str(uuid.uuid1())
 
     if session_id not in SESSIONS:
         SESSIONS[session_id] = GameSession()
