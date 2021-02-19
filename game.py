@@ -92,7 +92,9 @@ class GameSession():
 
             await self._send_message_to_all_players({"type": "users", "count": 2})
 
-            # # Send first puzzle
+            # TODO: save start time in a separate table
+
+            # Send first puzzle
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
             self.db_game = db.Game.create(game_id=self.game_id, cluster_id=self.puzzle_id, user1=self.player_ids[0],
                                           user2=self.player_ids[1], guess='')
