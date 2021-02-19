@@ -92,14 +92,12 @@ class GameSession():
 
             await self._send_message_to_all_players({"type": "users", "count": 2})
 
-            # TODO: save start_time in a separate table
-
             # Send first puzzle
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
-            self.db_game = db.Game.create(game_id=self.game_id, cluster_id=self.puzzle_id, user1=self.player_ids[0],
-                                          user2=self.player_ids[1], guess='')
             await self._send_message_to_all_players({"type": "state", "value": f"{self.words}"})
             self.start_time = datetime.now()
+            self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
+                                          user1=self.player_ids[0], user2=self.player_ids[1], guess='')
 
         return len(self.players)
 
@@ -139,10 +137,10 @@ class GameSession():
             for pid in self.players.keys():
                 self.players[pid].guesses = set()  # Clear guesses for new puzzle
             self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
-            self.db_game = db.Game.create(game_id=self.game_id, cluster_id=self.puzzle_id, user1=self.player_ids[0],
-                                          user2=self.player_ids[1], guess='')
             await self._send_message_to_all_players({"type": "state", "value": f"{self.words}"})
             self.start_time = datetime.now()
+            self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
+                                          user1=self.player_ids[0], user2=self.player_ids[1], guess='')
 
 
 
