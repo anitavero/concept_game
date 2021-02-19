@@ -8,6 +8,7 @@ import logging
 import websockets
 from random import randint
 from datetime import datetime
+from collections import OrderedDict
 
 import enum
 
@@ -22,7 +23,7 @@ N_PUZZLES = len(PUZZLES)
 logging.basicConfig()
 
 
-SESSIONS = {}
+SESSIONS = OrderedDict()
 
 
 class GameSessionState(enum.Enum):
