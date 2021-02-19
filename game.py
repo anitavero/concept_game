@@ -74,6 +74,7 @@ class GameSession():
 
         player = GamePlayer(websocket)
 
+        # TODO: player_id should be IP address or sth
         if 1 not in self.players:
             player_id = 1
         elif 2 not in self.players:
