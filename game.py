@@ -178,7 +178,7 @@ async def game(websocket, path):
             del SESSIONS[session_id]
 
 
-start_server = websockets.serve(game, "localhost", 6789)
+start_server = websockets.serve(game, "", 6789)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
