@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+
 import { GuessList } from './GuessList';
 import { WordList } from './WordList';
-import TextField from '@material-ui/core/TextField';
 
 const useStyles = makeStyles((theme) => ({
     guessForm: {
@@ -43,17 +44,21 @@ export const Game : React.FC<GameProps> =  (props: GameProps) => {
             <GuessList guesses={props.guesses} matching_guess="" />
     
             <TextField
-            variant="outlined"
-            margin="normal"
-            fullWidth
-            label="Type your guess here and press enter."
-            name="guess"
-            value={guess}
-            onChange={handleGuessChange}
-            onKeyUp={checkForEnter}
-            autoFocus
+                variant="outlined"
+                margin="normal"
+                fullWidth
+                label="Type your guess here and press enter."
+                name="guess"
+                value={guess}
+                onChange={handleGuessChange}
+                onKeyUp={checkForEnter}
+                autoFocus
             />
         </div>
     </>
 );
 }
+
+
+
+//                 
