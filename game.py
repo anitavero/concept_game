@@ -6,7 +6,7 @@ import asyncio
 import json
 import logging
 import websockets
-from random import randint
+from random import randrange
 from datetime import datetime
 from collections import OrderedDict
 import uuid
@@ -93,8 +93,8 @@ class GameSession():
             await self._send_message_to_all_players({"type": "users", "count": 2})
 
             # Send first puzzle
-            self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
-            await self._send_message_to_all_players({"type": "state", "value": f"{self.words}"})
+            self.puzzle_id, self.words = PUZZLES[randrange(0, N_PUZZLES)]
+            await self._send_message_to_all_players({"type": "words", "words": self.words})
             self.start_time = datetime.now()
             self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
                                           user1=self.player_ids[0], user2=self.player_ids[1], guess='')
@@ -137,8 +137,8 @@ class GameSession():
             # New puzzle
             for pid in self.players.keys():
                 self.players[pid].guesses = set()  # Clear guesses for new puzzle
-            self.puzzle_id, self.words = PUZZLES[randint(0, N_PUZZLES)]
-            await self._send_message_to_all_players({"type": "state", "value": f"{self.words}"})
+            self.puzzle_id, self.words = PUZZLES[randrange(0, N_PUZZLES)]
+            await self._send_message_to_all_players({"type": "words", "words":self.words})
             self.start_time = datetime.now()
             self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
                                           user1=self.player_ids[0], user2=self.player_ids[1], guess='')
@@ -157,6 +157,7 @@ async def game(websocket, path):
         session_id = str(uuid.uuid1())
 
     if session_id not in SESSIONS:
+        print("creating new session", session_id)
         SESSIONS[session_id] = GameSession()
 
     game_session = SESSIONS[session_id]
