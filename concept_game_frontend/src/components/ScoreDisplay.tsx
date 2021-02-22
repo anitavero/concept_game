@@ -22,7 +22,7 @@ export const ScoreDisplay : React.FC<ScoreDisplayProps> =  (props: ScoreDisplayP
   if(props.score>0){
   return (
     <Badge className={classes.score} badgeContent={props.score} color="primary">
-        <StarIcon />
+        <StarIcon style={{ fontSize: 60 }}/>
     </Badge>
   );
   } else{
