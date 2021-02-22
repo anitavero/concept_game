@@ -168,7 +168,7 @@ async def game(websocket, path):
             print(message)
             data = json.loads(message)
             if data["action"] == "guess":
-                await game_session.add_guess(player_id, data["guess"][-2])  # TODO clear "" elements
+                await game_session.add_guess(player_id, data["guess"])
             else:
                 logging.error("unsupported event: {}", data)
     except websockets.exceptions.ConnectionClosedError:
