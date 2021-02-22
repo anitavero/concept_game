@@ -161,9 +161,9 @@ async def game(websocket, path):
         SESSIONS[session_id] = GameSession()
 
     game_session = SESSIONS[session_id]
-    player_id = await game_session.register_player( websocket )
 
     try:
+        player_id = await game_session.register_player(websocket)
         async for message in websocket:
             print(message)
             data = json.loads(message)
