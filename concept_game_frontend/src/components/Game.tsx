@@ -15,6 +15,7 @@ const useStyles = makeStyles((theme) => ({
 
 interface GameProps {
     words: string[];
+    match: boolean;
     guesses: string[];
     sendGuess : (guess : string ) => void;
 }
@@ -38,7 +39,8 @@ export const Game : React.FC<GameProps> =  (props: GameProps) => {
 
   return (
     <>
-        <WordList words={props.words}/>
+        <WordList words={props.words}
+                  match={props.match}/>
         
         <div className={classes.guessForm}>
             <GuessList guesses={props.guesses} matching_guess="" />

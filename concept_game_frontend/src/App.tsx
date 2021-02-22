@@ -29,6 +29,7 @@ function App() {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [readyToGuess, setReadyToGuess] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
+  const [match, setMatch] = useState<boolean>(false)
 
 
   const ws = useRef<WebSocket|null>(null);
@@ -42,10 +43,12 @@ function App() {
             case 'words':
                   setGuesses([]);
                   setReadyToGuess(true);
+                  setMatch(true);
                   setWords(data.words);
                   break;
             case 'score':
                   setScore(data.score);
+                  setMatch(false);
                   break;
             default:
                 console.error(
@@ -82,12 +85,12 @@ function App() {
   return (
     <Container component="main" maxWidth="xs">
 
-      <ScoreDisplay score={score} />
+      <ScoreDisplay score={score}/>
       
       <CssBaseline />
       <div className={classes.paper}>
 
-        {readyToGuess ? <Game words={words} guesses={guesses} sendGuess={handleGuess} /> : <Loby />}
+        {readyToGuess ? <Game words={words} match={match} guesses={guesses} sendGuess={handleGuess} /> : <Loby />}
 
 
       </div>
