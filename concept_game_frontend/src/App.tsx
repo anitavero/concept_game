@@ -40,11 +40,6 @@ function App() {
         const data = JSON.parse(event.data);
         switch (data.type) {
             case 'words':
-                setGuesses([]);
-                setReadyToGuess(true);
-                setWords(data.words);
-                break;
-            case 'words':
                   setGuesses([]);
                   setReadyToGuess(true);
                   setWords(data.words);
