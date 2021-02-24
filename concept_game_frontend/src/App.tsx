@@ -7,6 +7,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 
 import { Loby } from './components/Loby';
+import { Cover } from './components/Cover';
 import { Game } from './components/Game';
 import { ScoreDisplay } from './components/ScoreDisplay';
 
@@ -29,7 +30,8 @@ function App() {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [readyToGuess, setReadyToGuess] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
-  const [match, setMatch] = useState<boolean>(false)
+  const [match, setMatch] = useState<boolean>(false);
+  const [startGame, setStartGame] = useState<boolean>(false);
 
 
   const ws = useRef<WebSocket|null>(null);
@@ -50,6 +52,11 @@ function App() {
                   setScore(data.score);
                   setMatch(false);
                   break;
+            case 'other_player_abandoned_game':
+                setStartGame(false);
+                break;
+            case 'users':
+                break;
             default:
                 console.error(
                     "unsupported event", data);
@@ -71,7 +78,9 @@ function App() {
   const readyToGuess : boolean = true;
   const score : number = 0;
   */
-
+  function handleStart(start: boolean) {
+    setStartGame(start);
+  }
 
   function handleGuess(guess: string) {
     setGuesses(guesses.concat(guess));
@@ -80,22 +89,26 @@ function App() {
         JSON.stringify({'action': 'guess', 'guess': guess
       }));
     }
-  };
+  }
+    {
+      return (
+          <Container component="main" maxWidth="xs">
 
-  return (
-    <Container component="main" maxWidth="xs">
+              <ScoreDisplay score={score}/>
 
-      <ScoreDisplay score={score}/>
-      
-      <CssBaseline />
-      <div className={classes.paper}>
+              <CssBaseline/>
+              <div className={classes.paper}>
+                  {startGame                    // TODO: Often chaotic with two players
+                      ? [(readyToGuess
+                          ? <Game words={words} match={match} guesses={guesses} sendGuess={handleGuess}/>
+                          : <Loby/>),]
+                      : [<Cover startGame={startGame} setStart={handleStart}/>]
+                  }
 
-        {readyToGuess ? <Game words={words} match={match} guesses={guesses} sendGuess={handleGuess} /> : <Loby />}
-
-
-      </div>
-    </Container>
-  );
+              </div>
+          </Container>
+      );
+  }
 }
 
 export default App;
