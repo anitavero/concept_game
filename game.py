@@ -68,6 +68,11 @@ class GameSession():
         await asyncio.wait([
             asyncio.create_task(p.websocket.send(message_json)) for p in self.players.values()])
 
+    async def send_message_to_player(self, message, player_id):
+        message_json = json.dumps(message)
+        await asyncio.wait([
+            asyncio.create_task(self.players[player_id].websocket.send(message_json))])
+
 
     async def register_player(self, websocket) -> int:
         if self.session_state!=GameSessionState.WAITING_FOR_PLAYERS:
@@ -199,20 +204,25 @@ async def serve_queue(websocket):
                     SESSIONS[session_id] = GameSession()
 
                 game_session = SESSIONS[session_id]
-                game_session.send_message_to_all_players({"type": "session", "session_id": session_id})
+                player_id = await game_session.register_player(websocket)
+                await game_session.send_message_to_player({"type": "session",
+                                                                "session_id": session_id,
+                                                                "player_id": player_id},
+                                                          player_id)
             else:
                 logging.error("unsupported event: {}", data)
     except websockets.exceptions.ConnectionClosedError:
         pass # client went away whatever
 
 
-async def serve_game_session(websocket, session_id):
+async def serve_game_session(websocket, session_id, player_id):
     print('GAME')
     game_session = SESSIONS[session_id]
+    player_id = int(player_id)
     try:
-        player_id = await game_session.register_player(websocket)
+        # player_id = await game_session.register_player(websocket)
         async for message in websocket:
-            print(message)
+            print("Player", player_id, message)
             data = json.loads(message)
             if data["action"] == "guess":
                 await game_session.add_guess(player_id, data["guess"])
@@ -231,8 +241,9 @@ async def server(websocket, path):
         await serve_queue(websocket)
 
     elif path.startswith("/session/"):
-        session_id = os.path.split(path)[-1]
-        await serve_game_session(websocket, session_id)
+        session_id, player_id = path.split('/')[-2:]
+        print(session_id, player_id)
+        await serve_game_session(websocket, session_id, player_id)
 
 
 if __name__ == "__main__":

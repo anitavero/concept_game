@@ -43,23 +43,24 @@ function App() {
         const data = JSON.parse(event.data);
         switch (data.type) {
             case 'words':
-                  setGuesses([]);
-                  setReadyToGuess(true);
-                  setMatch(true);
-                  setWords(data.words);
-                  break;
+                setGuesses([]);
+                setReadyToGuess(true);
+                setMatch(true);
+                setWords(data.words);
+                break;
             case 'score':
-                  setScore(data.score);
-                  setMatch(false);
-                  break;
+                setScore(data.score);
+                setMatch(false);
+                break;
             case 'other_player_abandoned_game':
                 setStartGame(false);
                 break;
             case 'users':
                 break;
             case 'session':
-                console.log(data.session_id);
-                ws.current = new WebSocket("ws://" + location.hostname + ":6789/session/" + data.session_id);
+                console.log(data.session_id, data.player_id);
+                ws.current = new WebSocket("ws://" + location.hostname + ":6789/session/" + data.session_id
+                                            + "/" + data.player_id);
                 break;
             default:
                 console.error(
@@ -83,16 +84,18 @@ function App() {
   const score : number = 0;
   */
   function handleStart(start: boolean) {
-    setStartGame(start);
-    // TODO send {'action': 'play'} to server
+      setStartGame(start);
+      if (ws.current) {
+          ws.current.send(
+              JSON.stringify({'action': 'play'}));
+      }
   }
 
   function handleGuess(guess: string) {
     setGuesses(guesses.concat(guess));
     if(ws.current){
       ws.current.send(
-        JSON.stringify({'action': 'guess', 'guess': guess
-      }));
+        JSON.stringify({'action': 'guess', 'guess': guess}));
     }
   }
     {
