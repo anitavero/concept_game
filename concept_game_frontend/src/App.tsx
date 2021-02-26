@@ -38,7 +38,7 @@ function App() {
 
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://" + location.hostname + ":6789");
+    ws.current = new WebSocket("ws://" + location.hostname + ":6789" + "/queue");
     ws.current.onmessage = function (event) {
         const data = JSON.parse(event.data);
         switch (data.type) {
@@ -56,6 +56,10 @@ function App() {
                 setStartGame(false);
                 break;
             case 'users':
+                break;
+            case 'session':
+                console.log(data.session_id);
+                ws.current = new WebSocket("ws://" + location.hostname + ":6789/session/" + data.session_id);
                 break;
             default:
                 console.error(
@@ -80,6 +84,7 @@ function App() {
   */
   function handleStart(start: boolean) {
     setStartGame(start);
+    // TODO send {'action': 'play'} to server
   }
 
   function handleGuess(guess: string) {
