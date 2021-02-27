@@ -14,7 +14,7 @@ for a in db.Answer.select().join(db.Game).where(db.Game.game_id == 0):
 
 List all Games with Answers:
 for g in db.Game.select():
-    print(g.game_id, g.start_time, g.cluster_id,g.user1, g.user2, g.guess,
+    print(g.game_id, g.start_time, g.cluster_id, g.user1, g.user2, g.guess,
           [(a.cluster_id, a.user, a.word, a.e_time) for a in g.answers.select()])
 
 List all clusters:
@@ -23,7 +23,7 @@ for c in db.Cluster.select():
 """
 from peewee import *
 
-db = SqliteDatabase('concept.db')
+db = SqliteDatabase('concept_game_backend/concept.db')
 
 class Game(Model):
     game_id = TextField()

@@ -1,13 +1,13 @@
 import os
 import json
-from db import *
+from concept_game_backend.db import *
 
 
 if __name__ == '__main__':
     db.create_tables([Game, Answer, Cluster])
 
     # Insert cluster data into Cluster table with unique ids.
-    with open('cluster_files.json', 'r') as f:
+    with open('concept_game_backend/cluster_files.json', 'r') as f:
         cf = json.load(f)
 
     for clfile in cf['clfiles']:
