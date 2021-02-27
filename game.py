@@ -149,40 +149,6 @@ class GameSession():
 
 
 
-
-# async def game(websocket, path):
-#
-#     # Create unique id for each GameSession.
-#     if len(SESSIONS) == 0:
-#         session_id = str(uuid.uuid1())
-#     elif len(list(SESSIONS.values())[-1].players) < 2:
-#         session_id = list(SESSIONS.keys())[-1]
-#     else:
-#         session_id = str(uuid.uuid1())
-#
-#     if session_id not in SESSIONS:
-#         print("creating new session", session_id)
-#         SESSIONS[session_id] = GameSession()
-#
-#     game_session = SESSIONS[session_id]
-#
-#     try:
-#         player_id = await game_session.register_player(websocket)
-#         async for message in websocket:
-#             print(message)
-#             data = json.loads(message)
-#             if data["action"] == "guess":
-#                 await game_session.add_guess(player_id, data["guess"])
-#             else:
-#                 logging.error("unsupported event: {}", data)
-#     except websockets.exceptions.ConnectionClosedError:
-#         pass # client went away whatever
-#     finally:
-#         await game_session.unregister_player(player_id)
-#         if game_session.is_empty():
-#             del SESSIONS[session_id]
-
-
 async def serve_queue(websocket):
     print('QUEUE')
     try:
@@ -219,7 +185,6 @@ async def serve_game_session(websocket, session_id, player_id):
     game_session = SESSIONS[session_id]
     player_id = int(player_id)
     try:
-        # player_id = await game_session.register_player(websocket)
         async for message in websocket:
             print("Player", player_id, message)
             data = json.loads(message)
@@ -228,7 +193,7 @@ async def serve_game_session(websocket, session_id, player_id):
             else:
                 logging.error("unsupported event: {}", data)
     except websockets.exceptions.ConnectionClosedError:
-        pass # client went away whatever
+        pass    # client went away whatever
     finally:
         await game_session.unregister_player(player_id)
         if game_session.is_empty():
@@ -246,7 +211,6 @@ async def server(websocket, path):
 
 
 if __name__ == "__main__":
-    # start_server = websockets.serve(game, "", 6789)
     start_server = websockets.serve(server, "", 6789)
 
     asyncio.get_event_loop().run_until_complete(start_server)
