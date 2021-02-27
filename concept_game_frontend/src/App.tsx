@@ -23,6 +23,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
 function App() {
   const classes = useStyles();
 
@@ -32,57 +33,67 @@ function App() {
   const [score, setScore] = useState<number>(0);
   const [match, setMatch] = useState<boolean>(false);
   const [startGame, setStartGame] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string|null>(null);
 
 
   const ws = useRef<WebSocket|null>(null);
 
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://" + location.hostname + ":6789" + "/queue");
-    ws.current.onmessage = function (event) {
-        const data = JSON.parse(event.data);
-        switch (data.type) {
-            case 'words':
-                setGuesses([]);
-                setReadyToGuess(true);
-                setMatch(true);
-                setWords(data.words);
-                break;
-            case 'score':
-                setScore(data.score);
-                setMatch(false);
-                break;
-            case 'other_player_abandoned_game':
-                setStartGame(false);
-                break;
-            case 'users':
-                break;
-            case 'session':
-                console.log("joining session", data.session_id, data.player_id);
-                ws.current = new WebSocket("ws://" + location.hostname + ":6789/session/" + data.session_id
-                                            + "/" + data.player_id);
-                break;
-            default:
-                console.error(
-                    "unsupported event", data);
+        console.log('Mount useEffect', sessionId);
+        if(sessionId) {
+            console.log("Game is happening");
+            ws.current = new WebSocket("ws://" + location.hostname + ":6789/session/" + sessionId);
+
+            ws.current.onmessage = function (event) {
+              const data = JSON.parse(event.data);
+              switch (data.type) {
+                  case 'words':
+                      setGuesses([]);
+                      setReadyToGuess(true);
+                      setMatch(true);
+                      setWords(data.words);
+                      break;
+                  case 'score':
+                      setScore(data.score);
+                      setMatch(false);
+                      break;
+                  case 'other_player_abandoned_game':
+                      // setStartGame(false);
+                      setSessionId(null);
+                      break;
+                  default:
+                      console.error(
+                          "unsupported event", data);
+              }
+            };
+      }
+      else{
+        ws.current = new WebSocket("ws://" + location.hostname + ":6789" + "/queue");
+        ws.current.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            switch (data.type) {
+                case 'users':
+                    break;
+                case 'session':
+                    setSessionId(data.session_id);
+                    break;
+                default:
+                    console.error(
+                        "unsupported event", data);
+            }
         }
     };
 
     return () => {
+        console.log('Unmount useEffect');
       if(ws.current) {
         ws.current.close();
       }
     }
-  }, []);
+  }, [sessionId]);
 
 
-
-  /*
-  const words: string[] = ["warlord", "drone warfare", "nobel peace prize"];
-  const guesses : string[] = [];
-  const readyToGuess : boolean = true;
-  const score : number = 0;
-  */
   function handleStart(start: boolean) {
       setStartGame(start);
       if (ws.current) {
@@ -106,11 +117,11 @@ function App() {
 
               <CssBaseline/>
               <div className={classes.paper}>
-                  {startGame                    // TODO: Often chaotic with two players
-                      ? [(readyToGuess
+                  {startGame
+                      ? ((readyToGuess
                           ? <Game words={words} match={match} guesses={guesses} sendGuess={handleGuess}/>
-                          : <Loby/>),]
-                      : [<Cover startGame={startGame} setStart={handleStart}/>]
+                          : <Loby/>))
+                      : (<Cover startGame={startGame} setStart={handleStart}/>)
                   }
 
               </div>

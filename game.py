@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # WS server example that synchronizes state across clients
-
+import os
 import asyncio
 import json
 import logging
@@ -67,10 +67,10 @@ class GameSession():
         await asyncio.wait([
             asyncio.create_task(p.websocket.send(message_json)) for p in self.players.values()])
 
-    async def send_message_to_player(self, message, player_id):
+    async def send_message_to_client(self, message, websocket):
         message_json = json.dumps(message)
         await asyncio.wait([
-            asyncio.create_task(self.players[player_id].websocket.send(message_json))])
+            asyncio.create_task(websocket.send(message_json))])
 
 
     async def register_player(self, websocket) -> int:
@@ -87,22 +87,13 @@ class GameSession():
         else:
             raise Exception("Full but not detected.")
 
-
         self.players[player_id] = player
 
         if len(self.players)==2:
             self.session_state=GameSessionState.GUESSING
             self.player_ids = list(self.players.keys())
             self.game_id = list(SESSIONS.keys())[-1]
-
-            await self.send_message_to_all_players({"type": "users", "count": 2})
-
-            # Send first puzzle
-            self.puzzle_id, self.words = PUZZLES[randrange(0, N_PUZZLES)]
-            await self.send_message_to_all_players({"type": "words", "words": self.words})
-            self.start_time = datetime.now()
-            self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
-                                          user1=self.player_ids[0], user2=self.player_ids[1], guess='')
+            await self.new_puzzle()
 
         return len(self.players)
 
@@ -116,6 +107,13 @@ class GameSession():
     def is_empty(self):
         return len(self.players)==0
 
+    async def new_puzzle(self):
+        """Send puzzle to users"""
+        self.puzzle_id, self.words = PUZZLES[randrange(0, N_PUZZLES)]
+        await self.send_message_to_all_players({"type": "words", "words": self.words})
+        self.start_time = datetime.now()
+        self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
+                                      user1=self.player_ids[0], user2=self.player_ids[1], guess='')
 
     async def add_guess(self, player_id, guess):
         time = datetime.now()
@@ -141,12 +139,7 @@ class GameSession():
             # New puzzle
             for pid in self.players.keys():
                 self.players[pid].guesses = set()  # Clear guesses for new puzzle
-            self.puzzle_id, self.words = PUZZLES[randrange(0, N_PUZZLES)]
-            await self.send_message_to_all_players({"type": "words", "words":self.words})
-            self.start_time = datetime.now()
-            self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
-                                          user1=self.player_ids[0], user2=self.player_ids[1], guess='')
-
+            await self.new_puzzle()
 
 
 async def serve_queue(websocket):
@@ -169,21 +162,18 @@ async def serve_queue(websocket):
                     SESSIONS[session_id] = GameSession()
 
                 game_session = SESSIONS[session_id]
-                player_id = await game_session.register_player(websocket)
-                await game_session.send_message_to_player({"type": "session",
-                                                                "session_id": session_id,
-                                                                "player_id": player_id},
-                                                          player_id)
+                await game_session.send_message_to_client({"type": "session", "session_id": session_id},
+                                                          websocket)
             else:
                 logging.error("unsupported event: {}", data)
     except websockets.exceptions.ConnectionClosedError:
         pass # client went away whatever
 
 
-async def serve_game_session(websocket, session_id, player_id):
+async def serve_game_session(websocket, session_id):
     print('GAME')
     game_session = SESSIONS[session_id]
-    player_id = int(player_id)
+    player_id = await game_session.register_player(websocket)
     try:
         async for message in websocket:
             print("Player", player_id, message)
@@ -205,9 +195,9 @@ async def server(websocket, path):
         await serve_queue(websocket)
 
     elif path.startswith("/session/"):
-        session_id, player_id = path.split('/')[-2:]
-        print(session_id, player_id)
-        await serve_game_session(websocket, session_id, player_id)
+        session_id = os.path.split(path)[1]
+        print("Client game", session_id)
+        await serve_game_session(websocket, session_id)
 
 
 if __name__ == "__main__":
