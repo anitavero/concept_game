@@ -187,7 +187,7 @@ async def serve_queue(websocket):
     print('QUEUE')
     try:
         async for message in websocket:
-            print(message)
+            print('Client message', message)
             data = json.loads(message)
             if data["action"] == "play":
                 # Create unique id for each GameSession.

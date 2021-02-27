@@ -58,7 +58,7 @@ function App() {
             case 'users':
                 break;
             case 'session':
-                console.log(data.session_id, data.player_id);
+                console.log("joining session", data.session_id, data.player_id);
                 ws.current = new WebSocket("ws://" + location.hostname + ":6789/session/" + data.session_id
                                             + "/" + data.player_id);
                 break;
