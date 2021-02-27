@@ -2,7 +2,6 @@
 
 # WS server example that synchronizes state across clients
 
-import os
 import asyncio
 import json
 import logging
@@ -14,7 +13,7 @@ import uuid
 
 import enum
 
-import db
+from concept_game_backend import db
 
 PUZZLES = []
 for c in db.Cluster.select():
