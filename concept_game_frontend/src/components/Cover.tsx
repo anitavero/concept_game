@@ -30,7 +30,7 @@ export const Cover : React.FC<CoverProps> = (props: CoverProps) => {
         <div className={classes.description}>
             <h1>Concept Game</h1>
 
-            Concept Game is a two player collaborative game, where the players guess the concept
+            Concept Game is a two player collaborative game, where players guess the concept
             for a list of words. <br/><br/>
 
             The player pair receives a score when they mutually agree on a word or expression which describes the words.

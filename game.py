@@ -165,7 +165,7 @@ async def serve_queue(websocket):
                 await game_session.send_message_to_client({"type": "session", "session_id": session_id},
                                                           websocket)
             else:
-                logging.error("unsupported event: {}", data)
+                logging.error(f"unsupported event: {data}")
     except websockets.exceptions.ConnectionClosedError:
         pass # client went away whatever
 
@@ -181,9 +181,10 @@ async def serve_game_session(websocket, session_id):
             if data["action"] == "guess":
                 await game_session.add_guess(player_id, data["guess"])
             else:
-                logging.error("unsupported event: {}", data)
-    except websockets.exceptions.ConnectionClosedError:
-        pass    # client went away whatever
+                logging.error(f"unsupported event: {data}")
+    except (websockets.exceptions.ConnectionClosedError, KeyError) as err:
+        print('Game server error:', str(err))    # client went away whatever
+        await game_session.send_message_to_client({"type": "other_player_abandoned_game"}, websocket)
     finally:
         await game_session.unregister_player(player_id)
         if game_session.is_empty():

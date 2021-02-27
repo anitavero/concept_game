@@ -60,6 +60,7 @@ function App() {
                       break;
                   case 'other_player_abandoned_game':
                       // setStartGame(false);
+                      console.log(data);
                       setSessionId(null);
                       break;
                   default:
