@@ -59,7 +59,9 @@ function App() {
                       setMatch(false);
                       break;
                   case 'other_player_abandoned_game':
-                      // setStartGame(false);
+                      setReadyToGuess(false);
+                      setStartGame(false);  // Go to Cover
+                      setScore(0);
                       console.log(data);
                       setSessionId(null);
                       break;

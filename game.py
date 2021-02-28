@@ -98,11 +98,10 @@ class GameSession():
         return len(self.players)
 
     async def unregister_player(self, player_id):
-        del self.players[player_id]
-
         if self.session_state==GameSessionState.GUESSING:
             self.session_state = GameSessionState.GAME_ABANDONED
-            await self.send_message_to_all_players({"type": "other_player_abandoned_game"})
+        await self.send_message_to_all_players({"type": "other_player_abandoned_game"})
+        del self.players[player_id]
 
     def is_empty(self):
         return len(self.players)==0
@@ -162,12 +161,13 @@ async def serve_queue(websocket):
                     SESSIONS[session_id] = GameSession()
 
                 game_session = SESSIONS[session_id]
+                print('Queue sends session_id:', session_id)
                 await game_session.send_message_to_client({"type": "session", "session_id": session_id},
                                                           websocket)
             else:
                 logging.error(f"unsupported event: {data}")
-    except websockets.exceptions.ConnectionClosedError:
-        pass # client went away whatever
+    except websockets.exceptions.ConnectionClosedError as err:
+        print('Queue server error:', str(err))  # TODO: why does this happen
 
 
 async def serve_game_session(websocket, session_id):
@@ -182,12 +182,13 @@ async def serve_game_session(websocket, session_id):
                 await game_session.add_guess(player_id, data["guess"])
             else:
                 logging.error(f"unsupported event: {data}")
-    except (websockets.exceptions.ConnectionClosedError, KeyError) as err:
-        print('Game server error:', str(err))    # client went away whatever
-        await game_session.send_message_to_client({"type": "other_player_abandoned_game"}, websocket)
+    except Exception as err:
+        print('Game server error:', str(err), 'Player', player_id)    # client went away
     finally:
+        print('Game finally', list(SESSIONS.keys()))
         await game_session.unregister_player(player_id)
-        if game_session.is_empty():
+        # if game_session.is_empty():
+        if session_id in SESSIONS.keys():
             del SESSIONS[session_id]
 
 
