@@ -49,7 +49,7 @@ export const Game : React.FC<GameProps> =  (props: GameProps) => {
                 variant="outlined"
                 margin="normal"
                 fullWidth
-                label="Type your guess here and press enter. Type pass if you don't have any guess."
+                label="Type your guess or 'pass' here and press enter."
                 name="guess"
                 value={guess}
                 onChange={handleGuessChange}
