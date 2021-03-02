@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme) => ({
 
 interface GuessListProps {
     guesses: string[];
-    matching_guess: string;
+    matching_guess: boolean;
 }
 
 export const GuessList : React.FC<GuessListProps> =  (props: GuessListProps) => {
@@ -32,8 +32,8 @@ export const GuessList : React.FC<GuessListProps> =  (props: GuessListProps) => 
             <div>Your guesses:</div>
             <div className={classes.guessList}>
             {props.guesses.map((guess, index) =>
-                (props.matching_guess==guess ?
-                   <Chip icon={<DoneIcon/>} key={index} label={guess} color="primary" />
+                (props.matching_guess ?
+                   <Chip icon={<DoneIcon/>} key={index} label={guess} color="secondary" />
                    : <Chip label={guess} key={index} />)
             )}
             </div>

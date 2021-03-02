@@ -51,12 +51,12 @@ function App() {
                   case 'words':
                       setGuesses([]);
                       setReadyToGuess(true);
-                      setMatch(true);
+                      setMatch(false);
                       setWords(data.words);
                       break;
                   case 'score':
                       setScore(data.score);
-                      setMatch(false);
+                      setMatch(true);
                       break;
                   case 'other_player_abandoned_game':
                       setReadyToGuess(false);

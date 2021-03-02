@@ -25,7 +25,7 @@ export const WordList : React.FC<WordListProps> =  (props: WordListProps) => {
   const classes = useStyles();
 
   return (
-    <Zoom in={props.match} timeout={100} mountOnEnter unmountOnExit>
+    <Zoom in={!props.match} timeout={100} mountOnEnter unmountOnExit>
         <Card className={classes.card}>
             <CardContent>
             <Typography className={classes.title} color="textSecondary" gutterBottom>

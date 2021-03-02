@@ -43,7 +43,7 @@ export const Game : React.FC<GameProps> =  (props: GameProps) => {
                   match={props.match}/>
         
         <div className={classes.guessForm}>
-            <GuessList guesses={props.guesses} matching_guess="" />
+            <GuessList guesses={props.guesses} matching_guess={props.match} />
     
             <TextField
                 variant="outlined"
