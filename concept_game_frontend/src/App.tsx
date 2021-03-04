@@ -5,6 +5,10 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
 
 import { Loby } from './components/Loby';
 import { Cover } from './components/Cover';
@@ -32,9 +36,13 @@ function App() {
   const [readyToGuess, setReadyToGuess] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
   const [match, setMatch] = useState<boolean>(false);
+  const [matchDialogue, setMatchDialogue] = useState<boolean>(false);
+  const [matchedGuess, setMatchedGuess] = useState<string>('');
   const [startGame, setStartGame] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string|null>(null);
 
+  const showMatch = () => setMatchDialogue(true);
+  const hideMatch = () => setTimeout(() => setMatchDialogue(false),1000);
 
   const ws = useRef<WebSocket|null>(null);
 
@@ -52,10 +60,13 @@ function App() {
                       setGuesses([]);
                       setReadyToGuess(true);
                       setMatch(false);
+                      hideMatch();
                       setWords(data.words);
                       break;
                   case 'score':
                       setScore(data.score);
+                      setMatchedGuess(data.match);
+                      showMatch();
                       setMatch(true);
                       break;
                   case 'other_player_abandoned_game':
@@ -120,11 +131,27 @@ function App() {
 
               <CssBaseline/>
               <div className={classes.paper}>
-                  {startGame
-                      ? ((readyToGuess
-                          ? <Game words={words} match={match} guesses={guesses} sendGuess={handleGuess}/>
-                          : <Loby/>))
-                      : (<Cover startGame={startGame} setStart={handleStart}/>)
+                  {!matchDialogue ?
+                          (startGame
+                          ? ((readyToGuess
+                              ? <Game words={words} match={match} guesses={guesses} sendGuess={handleGuess}/>
+                              : <Loby/>))
+                          : (<Cover startGame={startGame} setStart={handleStart}/>))
+                      : (
+                          <Dialog
+                              open={matchDialogue}
+                              onClose={hideMatch}
+                              aria-labelledby="alert-dialog-title"
+                              aria-describedby="alert-dialog-description"
+                            >
+                              <DialogTitle id="alert-dialog-title">{"Matched with"}</DialogTitle>
+                              <DialogContent>
+                                  <DialogContentText id="alert-dialog-description">
+                                      "{matchedGuess}"
+                                  </DialogContentText>
+                              </DialogContent>
+                          </Dialog>
+                      )
                   }
 
               </div>

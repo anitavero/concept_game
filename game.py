@@ -131,7 +131,7 @@ class GameSession():
             self.session_state = GameSessionState.WON
             if guess != 'pass':
                 self.score += 1
-            await self.send_message_to_all_players({"type": "score", "score": self.score})
+            await self.send_message_to_all_players({"type": "score", "score": self.score, "match": guess})
             self.db_game.guess = guess
             self.db_game.save()
 
