@@ -27,6 +27,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+interface DialogText {
+    title: string;
+    text: string;
+}
 
 function App() {
   const classes = useStyles();
@@ -37,12 +41,12 @@ function App() {
   const [score, setScore] = useState<number>(0);
   const [match, setMatch] = useState<boolean>(false);
   const [matchDialogue, setMatchDialogue] = useState<boolean>(false);
-  const [matchedGuess, setMatchedGuess] = useState<string>('');
   const [startGame, setStartGame] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string|null>(null);
+  const [dialogText, setDialogText] = useState<DialogText>({title: "Matched with", text: ''});
 
-  const showMatch = () => setMatchDialogue(true);
-  const hideMatch = () => setTimeout(() => setMatchDialogue(false),1000);
+  const showDialog = () => setMatchDialogue(true);
+  const hideDialog = () => setTimeout(() => setMatchDialogue(false),1500);
 
   const ws = useRef<WebSocket|null>(null);
 
@@ -60,13 +64,13 @@ function App() {
                       setGuesses([]);
                       setReadyToGuess(true);
                       setMatch(false);
-                      hideMatch();
+                      hideDialog();
                       setWords(data.words);
                       break;
                   case 'score':
                       setScore(data.score);
-                      setMatchedGuess(data.match);
-                      showMatch();
+                      setDialogText({title: "Matched with", text: data.match});
+                      showDialog();
                       setMatch(true);
                       break;
                   case 'other_player_abandoned_game':
@@ -75,6 +79,9 @@ function App() {
                       setScore(0);
                       console.log(data);
                       setSessionId(null);
+                      setDialogText({title: "Other player left", text: ":("});
+                      showDialog();
+                      hideDialog();
                       break;
                   default:
                       console.error(
@@ -140,14 +147,14 @@ function App() {
                       : (
                           <Dialog
                               open={matchDialogue}
-                              onClose={hideMatch}
+                              onClose={hideDialog}
                               aria-labelledby="alert-dialog-title"
                               aria-describedby="alert-dialog-description"
                             >
-                              <DialogTitle id="alert-dialog-title">{"Matched with"}</DialogTitle>
+                              <DialogTitle id="alert-dialog-title">{dialogText.title}</DialogTitle>
                               <DialogContent>
                                   <DialogContentText id="alert-dialog-description">
-                                      "{matchedGuess}"
+                                      {dialogText.text}
                                   </DialogContentText>
                               </DialogContent>
                           </Dialog>
