@@ -20,12 +20,12 @@ export const ScoreDisplay : React.FC<ScoreDisplayProps> =  (props: ScoreDisplayP
   const classes = useStyles();
 
   if(props.score>0){
-  return (
-    <Badge className={classes.score} badgeContent={props.score} color="primary">
-        <StarIcon style={{ fontSize: 60 }}/>
-    </Badge>
-  );
+      return (
+        <Badge className={classes.score} badgeContent={props.score} color="primary">
+            <StarIcon style={{ fontSize: 60 }}/>
+        </Badge>
+      );
   } else{
       return <></>;
-  }
+    }
 }

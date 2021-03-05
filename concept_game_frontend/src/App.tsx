@@ -14,6 +14,7 @@ import { Loby } from './components/Loby';
 import { Cover } from './components/Cover';
 import { Game } from './components/Game';
 import { ScoreDisplay } from './components/ScoreDisplay';
+import { Timer } from './components/Timer';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -44,6 +45,8 @@ function App() {
   const [startGame, setStartGame] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string|null>(null);
   const [dialogText, setDialogText] = useState<DialogText>({title: "Matched with", text: ''});
+  const [showTimer, setShowTimer] = useState<boolean>(false);
+  const [time, setTime] = useState<number>(40);
 
   const showDialog = () => setMatchDialogue(true);
   const hideDialog = () => setTimeout(() => setMatchDialogue(false),1500);
@@ -66,16 +69,22 @@ function App() {
                       setMatch(false);
                       hideDialog();
                       setWords(data.words);
+                      setTime(40);
+                      setShowTimer(true);
                       break;
                   case 'score':
+                      setShowTimer(false);
                       setScore(data.score);
-                      setDialogText({title: "Matched with", text: data.match});
-                      showDialog();
+                      if(data.match != 'timeout') {
+                          setDialogText({title: "Matched with", text: data.match});
+                          showDialog();
+                      }
                       setMatch(true);
                       break;
                   case 'other_player_abandoned_game':
                       setReadyToGuess(false);
                       setStartGame(false);  // Go to Cover
+                      setShowTimer(false);
                       setScore(0);
                       console.log(data);
                       setSessionId(null);
@@ -115,6 +124,15 @@ function App() {
   }, [sessionId]);
 
 
+  function handleTime(curTime: number) {
+      setTime(curTime);
+      console.log("TIME", curTime);
+      if(curTime == 0 && ws.current){
+          ws.current.send(
+              JSON.stringify({'action': 'guess', 'guess': "TIMEOUT"}));
+      }
+  }
+
   function handleStart(start: boolean) {
       setStartGame(start);
       if (ws.current) {
@@ -135,6 +153,8 @@ function App() {
           <Container component="main" maxWidth="xs">
 
               <ScoreDisplay score={score}/>
+
+              {showTimer ? <Timer show={showTimer} time={time} sendTime={handleTime}/> : <></>}
 
               <CssBaseline/>
               <div className={classes.paper}>
