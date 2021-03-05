@@ -14,6 +14,7 @@ import { Loby } from './components/Loby';
 import { Cover } from './components/Cover';
 import { Game } from './components/Game';
 import { ScoreDisplay } from './components/ScoreDisplay';
+import { Timer } from './components/Timer';
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -44,6 +45,8 @@ function App() {
   const [startGame, setStartGame] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string|null>(null);
   const [dialogText, setDialogText] = useState<DialogText>({title: "Matched with", text: ''});
+  const [showTimer, setShowTimer] = useState<boolean>(false);
+  const [time, setTime] = useState<number>(40);
 
   const showDialog = () => setMatchDialogue(true);
   const hideDialog = () => setTimeout(() => setMatchDialogue(false),1500);
@@ -66,12 +69,15 @@ function App() {
                       setMatch(false);
                       hideDialog();
                       setWords(data.words);
+                      setShowTimer(true);
                       break;
                   case 'score':
                       setScore(data.score);
                       setDialogText({title: "Matched with", text: data.match});
                       showDialog();
                       setMatch(true);
+                      setShowTimer(false);
+                      setTime(40);
                       break;
                   case 'other_player_abandoned_game':
                       setReadyToGuess(false);
@@ -115,6 +121,10 @@ function App() {
   }, [sessionId]);
 
 
+  function handleTime(curTime: number) {
+      setTime(curTime);
+  }
+
   function handleStart(start: boolean) {
       setStartGame(start);
       if (ws.current) {
@@ -135,6 +145,8 @@ function App() {
           <Container component="main" maxWidth="xs">
 
               <ScoreDisplay score={score}/>
+
+              <Timer show={showTimer} time={time} sendTime={handleTime}/>
 
               <CssBaseline/>
               <div className={classes.paper}>
