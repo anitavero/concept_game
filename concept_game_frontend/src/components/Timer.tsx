@@ -13,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function CircularProgressWithLabel(props: CircularProgressProps & { value: number, multiplyer: number }) {
+function CircularProgressWithLabel(props: CircularProgressProps & { value: number, multiplier: number }) {
   const classes = useStyles();
     return (
     <Box className={classes.timer}>
@@ -29,7 +29,7 @@ function CircularProgressWithLabel(props: CircularProgressProps & { value: numbe
         justifyContent="center"
       >
         <Typography variant="h4" component="div" color="textSecondary">
-            {Math.round(props.multiplyer * props.value)}
+            {Math.round(props.multiplier * props.value)}
         </Typography>
       </Box>
     </Box>
@@ -63,7 +63,7 @@ export const Timer : React.FC<TimerProps> =  (props: TimerProps) => {
 
   if(props.show){
       return (<CircularProgressWithLabel value={Math.round((props.time == 0 ? 0 : 100/props.time) * progress)}
-                                         multiplyer={props.time/100}/>);
+                                         multiplier={props.time/100}/>);
   } else{
       return <></>;
   }
