@@ -49,9 +49,9 @@ export const Game : React.FC<GameProps> =  (props: GameProps) => {
                 variant="outlined"
                 margin="normal"
                 fullWidth
-                label="Type your guess or 'pass' here and press enter."
+                label="Type your guess or 'pass' then press enter."
                 name="guess"
-                value={guess}
+                value={(props.match ? "" : guess)}
                 onChange={handleGuessChange}
                 onKeyUp={checkForEnter}
                 autoFocus

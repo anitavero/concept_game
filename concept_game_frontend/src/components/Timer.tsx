@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import CircularProgress, { CircularProgressProps } from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
@@ -39,7 +39,7 @@ function CircularProgressWithLabel(props: CircularProgressProps & { value: numbe
 interface TimerProps {
     show: boolean;
     time: number;
-    sendTime: (curTime : number ) => void;
+    sendTime: (progress : number ) => void;
 }
 
 export const Timer : React.FC<TimerProps> =  (props: TimerProps) => {
@@ -47,8 +47,8 @@ export const Timer : React.FC<TimerProps> =  (props: TimerProps) => {
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      setProgress((prevProgress) => (prevProgress > 0 ? prevProgress - 1 : 0));
-      props.sendTime( progress );
+        setProgress((prevProgress) => (prevProgress > 0 ? prevProgress - 1 : 0));
+        props.sendTime(progress);
     }, 1000);
     return () => {
       clearInterval(timer);
@@ -56,7 +56,7 @@ export const Timer : React.FC<TimerProps> =  (props: TimerProps) => {
   }, []);
 
   if(props.show){
-  return (<CircularProgressWithLabel value={Math.round((100/props.time) * progress)} multiplyer={props.time/100}/>);
+      return (<CircularProgressWithLabel value={Math.round((100/props.time) * progress)} multiplyer={props.time/100}/>);
   } else{
       return <></>;
   }

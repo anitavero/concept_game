@@ -69,15 +69,19 @@ function App() {
                       setMatch(false);
                       hideDialog();
                       setWords(data.words);
+                      setTime(40);
                       setShowTimer(true);
+                      console.log("show", showTimer);
+                      console.log("match", match);
                       break;
                   case 'score':
+                      setShowTimer(false);
                       setScore(data.score);
                       setDialogText({title: "Matched with", text: data.match});
                       showDialog();
                       setMatch(true);
-                      setShowTimer(false);
-                      setTime(40);
+                      console.log("show", showTimer);
+                      console.log("match", match);
                       break;
                   case 'other_player_abandoned_game':
                       setReadyToGuess(false);
@@ -123,6 +127,11 @@ function App() {
 
   function handleTime(curTime: number) {
       setTime(curTime);
+      console.log("TIME", curTime);
+      if(curTime == 0 && ws.current){
+          ws.current.send(
+              JSON.stringify({'action': 'guess', 'guess': "TIMEOUT"}));
+      }
   }
 
   function handleStart(start: boolean) {
@@ -146,7 +155,7 @@ function App() {
 
               <ScoreDisplay score={score}/>
 
-              <Timer show={showTimer} time={time} sendTime={handleTime}/>
+              {showTimer ? <Timer show={showTimer} time={time} sendTime={handleTime}/> : <></>}
 
               <CssBaseline/>
               <div className={classes.paper}>
