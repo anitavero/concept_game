@@ -71,21 +71,20 @@ function App() {
                       setWords(data.words);
                       setTime(40);
                       setShowTimer(true);
-                      console.log("show", showTimer);
-                      console.log("match", match);
                       break;
                   case 'score':
                       setShowTimer(false);
                       setScore(data.score);
-                      setDialogText({title: "Matched with", text: data.match});
-                      showDialog();
+                      if(data.match != 'timeout') {
+                          setDialogText({title: "Matched with", text: data.match});
+                          showDialog();
+                      }
                       setMatch(true);
-                      console.log("show", showTimer);
-                      console.log("match", match);
                       break;
                   case 'other_player_abandoned_game':
                       setReadyToGuess(false);
                       setStartGame(false);  // Go to Cover
+                      setShowTimer(false);
                       setScore(0);
                       console.log(data);
                       setSessionId(null);

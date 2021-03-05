@@ -46,9 +46,15 @@ export const Timer : React.FC<TimerProps> =  (props: TimerProps) => {
   const [progress, setProgress] = React.useState(props.time);
 
   React.useEffect(() => {
-    const timer = setInterval(() => {
-        setProgress((prevProgress) => (prevProgress > 0 ? prevProgress - 1 : 0));
-        props.sendTime(progress);
+        let p = props.time;
+        const timer = setInterval(() => {
+            if(p > 0){
+                setProgress((prevProgress) => (prevProgress > 0 ? prevProgress - 1 : 0));
+                p -= 1;
+            }
+            else{
+                props.sendTime(p);
+            }
     }, 1000);
     return () => {
       clearInterval(timer);
@@ -56,7 +62,8 @@ export const Timer : React.FC<TimerProps> =  (props: TimerProps) => {
   }, []);
 
   if(props.show){
-      return (<CircularProgressWithLabel value={Math.round((100/props.time) * progress)} multiplyer={props.time/100}/>);
+      return (<CircularProgressWithLabel value={Math.round((props.time == 0 ? 0 : 100/props.time) * progress)}
+                                         multiplyer={props.time/100}/>);
   } else{
       return <></>;
   }
