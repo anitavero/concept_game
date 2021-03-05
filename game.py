@@ -73,8 +73,10 @@ class GameSession():
             asyncio.create_task(websocket.send(message_json))])
 
     async def send_message_to_other_player(self, message, player_id):
-        websocket = self.players[get_other_player_id(player_id)].websocket
-        await self.send_message_to_client(message, websocket)
+        other_id = get_other_player_id(player_id)
+        if other_id in self.players:
+            websocket = self.players[other_id].websocket
+            await self.send_message_to_client(message, websocket)
 
     async def register_player(self, websocket) -> int:
         if self.session_state!=GameSessionState.WAITING_FOR_PLAYERS:
@@ -103,7 +105,6 @@ class GameSession():
     async def unregister_player(self, player_id):
         if self.session_state==GameSessionState.GUESSING:
             self.session_state = GameSessionState.GAME_ABANDONED
-        # await self.send_message_to_all_players({"type": "other_player_abandoned_game"})
         await self.send_message_to_other_player({"type": "other_player_abandoned_game"}, player_id)
         del self.players[player_id]
 
@@ -189,9 +190,8 @@ async def serve_game_session(websocket, session_id):
     except Exception as err:
         print('Game server error:', str(err), 'Player', player_id)    # client went away
     finally:
-        print('Game finally', list(SESSIONS.keys()))
+        print('Game finally', list(SESSIONS.keys()), "Player", player_id)
         await game_session.unregister_player(player_id)
-        # if game_session.is_empty():
         if session_id in SESSIONS.keys():
             del SESSIONS[session_id]
 
