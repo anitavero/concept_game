@@ -16,4 +16,5 @@ if __name__ == '__main__':
 
         embid = clfile.split('.')[0]
         for cl, words in clusters:
-            Cluster.create(cluster=f'{embid}_{cl}', words=', '.join(words))
+            if len(words) > 1:  # Leave out one word clusters
+                Cluster.create(cluster=f'{embid}_{cl}', words=', '.join(words))
