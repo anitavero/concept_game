@@ -134,7 +134,7 @@ class GameSession():
 
         if guess in self.players[other_player_id].guesses:
             self.session_state = GameSessionState.WON
-            if guess != 'pass' or guess != 'timeout':
+            if guess != 'pass' and guess != 'timeout':
                 self.score += 1
             await self.send_message_to_all_players({"type": "score", "score": self.score, "match": guess})
             self.db_game.guess = guess
