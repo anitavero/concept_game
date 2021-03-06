@@ -50,6 +50,7 @@ function App() {
 
   const showDialog = () => setMatchDialogue(true);
   const hideDialog = () => setTimeout(() => setMatchDialogue(false),1500);
+  const showDelayedTimer = () => setTimeout(() => setShowTimer(true),1500);
 
   const ws = useRef<WebSocket|null>(null);
 
@@ -70,7 +71,7 @@ function App() {
                       hideDialog();
                       setWords(data.words);
                       setTime(40);
-                      setShowTimer(true);
+                      showDelayedTimer();
                       break;
                   case 'score':
                       setShowTimer(false);
@@ -173,7 +174,7 @@ function App() {
                             >
                               <DialogTitle id="alert-dialog-title">{dialogText.title}</DialogTitle>
                               <DialogContent>
-                                  <DialogContentText id="alert-dialog-description">
+                                  <DialogContentText id="alert-dialog-description" align="center">
                                       {dialogText.text}
                                   </DialogContentText>
                               </DialogContent>
