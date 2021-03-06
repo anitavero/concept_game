@@ -187,7 +187,7 @@ async def serve_game_session(websocket, session_id):
                 await game_session.add_guess(player_id, data["guess"])
             else:
                 logging.error(f"unsupported event: {data}")
-    except Exception as err:
+    except websockets.exceptions.ConnectionClosedError as err:
         print('Game server error:', str(err), 'Player', player_id)    # client went away
     finally:
         print('Game finally', list(SESSIONS.keys()), "Player", player_id)
