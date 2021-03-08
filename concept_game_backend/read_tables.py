@@ -1,3 +1,4 @@
+import argh
 from concept_game_backend import db
 
 
@@ -30,3 +31,7 @@ def print_clusters():
     clusters = read_clusters()
     for cid, words in clusters.items():
         print(cid, words)
+
+
+if __name__ == '__main__':
+    argh.dispatch_commands([print_games, print_clusters])
