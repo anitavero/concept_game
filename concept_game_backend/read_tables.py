@@ -12,7 +12,7 @@ def read_games():
     return games
 
 
-@arg('-fields', '--fields', nargs='+', type=str, default=None,
+@arg('-fields', '--fields', nargs='+', type=str, default=None, required=True,
      help='Choose from {game_id, start_time, cluster_id, user1, user2, guess, answers}')
 def print_games(fields=None):
     games = read_games()
