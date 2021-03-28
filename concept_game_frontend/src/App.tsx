@@ -27,10 +27,10 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(3, 0, 2),
   },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: '50%',
-    transform: 'translate(-50%, -50%)'
+    display: 'flex',
+    marginTop: 300,
+    flexDirection: 'column',
+    alignItems: 'center',
   },
 }));
 
