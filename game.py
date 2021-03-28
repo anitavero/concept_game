@@ -172,7 +172,7 @@ async def serve_queue(websocket):
             else:
                 logging.error(f"unsupported event: {data}")
     except websockets.exceptions.ConnectionClosedError as err:
-        print('Queue server error:', str(err))  # TODO: why does this happen
+        print('Queue server error:', str(err))
 
 
 async def serve_game_session(websocket, session_id):

@@ -5,6 +5,7 @@ import TextField from '@material-ui/core/TextField';
 
 import { GuessList } from './GuessList';
 import { WordList } from './WordList';
+import Button from "@material-ui/core/Button";
 
 const useStyles = makeStyles((theme) => ({
     guessForm: {
@@ -37,6 +38,11 @@ export const Game : React.FC<GameProps> =  (props: GameProps) => {
     }
   }
 
+    function handlePassButton() {
+        props.sendGuess( "pass" );
+        setGuess( "" );
+  }
+
   return (
     <>
         <WordList words={props.words}
@@ -49,18 +55,22 @@ export const Game : React.FC<GameProps> =  (props: GameProps) => {
                 variant="outlined"
                 margin="normal"
                 fullWidth
-                label="Type your guess or 'pass' then press enter."
+                label="Type your guess then press enter."
                 name="guess"
                 value={(props.match ? "" : guess)}
                 onChange={handleGuessChange}
                 onKeyUp={checkForEnter}
                 autoFocus
             />
+
+            <Button
+            variant="contained"
+            color="primary"
+            onClick={handlePassButton}
+            >
+            Pass
+            </Button>
         </div>
     </>
 );
 }
-
-
-
-//                 
