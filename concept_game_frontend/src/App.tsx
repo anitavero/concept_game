@@ -26,6 +26,12 @@ const useStyles = makeStyles((theme) => ({
   submit: {
     margin: theme.spacing(3, 0, 2),
   },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: '50%',
+    transform: 'translate(-50%, -50%)'
+  },
 }));
 
 interface DialogText {
@@ -151,6 +157,7 @@ function App() {
   }
     {
       return (
+          <>
           <Container component="main" maxWidth="xs">
 
               <ScoreDisplay score={score}/>
@@ -184,6 +191,10 @@ function App() {
 
               </div>
           </Container>
+            <div className={classes.footer}>
+                <p>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></p>
+            </div>
+          </>
       );
   }
 }
