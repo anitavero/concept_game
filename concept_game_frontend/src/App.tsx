@@ -76,6 +76,7 @@ function App() {
                       setMatch(false);
                       hideDialog();
                       setWords(data.words);
+                      setShowTimer(false);
                       setTime(40);
                       showDelayedTimer();
                       break;
@@ -89,15 +90,21 @@ function App() {
                       setMatch(true);
                       break;
                   case 'other_player_abandoned_game':
-                      setReadyToGuess(false);
-                      setStartGame(false);  // Go to Cover
-                      setShowTimer(false);
+                      // setReadyToGuess(false);
+                      // setStartGame(false);  // Go to Cover
+                      // setShowTimer(false);
                       setScore(0);
                       console.log(data);
-                      setSessionId(null);
+                      // setSessionId(null);
                       setDialogText({title: "Other player left", text: ":("});
                       showDialog();
                       hideDialog();
+                      break;
+                  case 'human_player':
+                      setDialogText({title: "New partner", text: ":)"});
+                      showDialog();
+                      hideDialog();
+                      setScore(0);
                       break;
                   default:
                       console.error(

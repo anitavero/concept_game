@@ -38,7 +38,10 @@ class GamePlayer():
 
 
 AUTO = 'AUTO'
-class AutoPlayer(GamePlayer):
+class AutoPlayer():
+
+    def __init__(self):
+        self.guesses = set()
 
     async def generate_guesses(self, cluster_id):
         self.guesses = {'autoguess', cluster_id}
@@ -136,17 +139,26 @@ class GameSession():
         return player_id
 
     async def unregister_player(self, player_id):
-        if self.session_state==GameSessionState.GUESSING:
-            self.session_state = GameSessionState.GAME_ABANDONED
+        # if self.session_state==GameSessionState.GUESSING:
+        #     self.session_state = GameSessionState.GAME_ABANDONED
         await self.send_message_to_other_player({"type": "other_player_abandoned_game"}, player_id)
         del self.players[player_id]
+        if len(self.players) > 0:
+            print("Add AutoPlayer")
+            self.autoplayer = AutoPlayer()
+            self.player_ids.append(AUTO)
+            self.players[AUTO] = self.autoplayer
+            await self.autoplayer.generate_guesses(self.puzzle_id)
+            self.score = 0
 
     async def unregister_autoplayer(self):
         if AUTO in self.player_ids:
             del self.players[AUTO]
             self.player_ids.remove(AUTO)
             self.autoplayer = None
-            # TODO: Send message to restart clock
+            # Send message about human player
+            self.score = 0
+            await self.send_message_to_all_players({"type": "human_player"})
 
     def is_empty(self):
         return len(self.players)==0
@@ -211,7 +223,7 @@ async def serve_queue(websocket):
 
                 if len(SH.real_player_ids_of_last_sess()) == 0:
                     print("Add AutoPlayer")
-                    SH.sessions[session_id].autoplayer = AutoPlayer(websocket)
+                    SH.sessions[session_id].autoplayer = AutoPlayer()
                     SH.sessions[session_id].player_ids.append(AUTO)
 
                 game_session = SH.sessions[session_id]
