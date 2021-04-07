@@ -129,8 +129,9 @@ class GameSession():
         self.players[player_id] = player
 
         if len(self.players) == 2 or self.autoplayer:
-            self.session_state=GameSessionState.GUESSING
+            # self.session_state=GameSessionState.GUESSING
             self.player_ids += list(self.players.keys())
+            self.player_ids = list(set(self.player_ids))
             if self.autoplayer:
                 self.players[AUTO] = self.autoplayer
             self.game_id = SH.last_session_id()
@@ -143,6 +144,7 @@ class GameSession():
         #     self.session_state = GameSessionState.GAME_ABANDONED
         await self.send_message_to_other_player({"type": "other_player_abandoned_game"}, player_id)
         del self.players[player_id]
+        self.player_ids.remove(player_id)
         if len(self.players) > 0:
             print("Add AutoPlayer")
             self.autoplayer = AutoPlayer()
@@ -253,7 +255,7 @@ async def serve_game_session(websocket, session_id):
     finally:
         print('Game finally', list(SH.sessions.keys()), "Player", player_id)
         await game_session.unregister_player(player_id)
-        if session_id in SH.sessions.keys():
+        if session_id in SH.sessions.keys() and SH.sessions[session_id].player_ids == []:
             del SH.sessions[session_id]
 
 

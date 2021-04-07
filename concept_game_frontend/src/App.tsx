@@ -96,7 +96,7 @@ function App() {
                       setScore(0);
                       console.log(data);
                       // setSessionId(null);
-                      setDialogText({title: "Other player left", text: ":("});
+                      setDialogText({title: "New partner", text: ":)"});
                       showDialog();
                       hideDialog();
                       break;
