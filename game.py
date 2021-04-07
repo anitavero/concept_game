@@ -24,9 +24,6 @@ N_PUZZLES = len(PUZZLES)
 logging.basicConfig()
 
 
-SESSIONS = OrderedDict()
-
-
 class GameSessionState(enum.Enum):
     WAITING_FOR_PLAYERS = 1
     GUESSING = 2
@@ -40,18 +37,39 @@ class GamePlayer():
         self.guesses = set()
 
 
-def get_other_player_id(player_id):
-    if player_id == 1:
-        return 2
-    elif player_id == 2:
-        return 1
-    else:
-        raise Exception(f"Unknown player_id {player_id}")
+AUTO = 'AUTO'
+class AutoPlayer(GamePlayer):
+
+    async def generate_guesses(self, cluster_id):
+        self.guesses = {'autoguess', cluster_id}
+        print(self.guesses)
+
+
+class SessionHandler():
+
+    def __init__(self):
+        self.sessions = OrderedDict()
+
+    def real_player_ids_of_last_sess(self):
+        return [pid for pid in self.last_session_values().player_ids if pid != AUTO]
+
+    async def remove_auto_if_exists(self):
+        await self.last_session_values().unregister_autoplayer()
+
+    def last_session_id(self):
+        return list(self.sessions.keys())[-1]
+
+    def last_session_values(self):
+        return list(self.sessions.values())[-1]
+
+
+SH = SessionHandler()
 
 
 class GameSession():
     def __init__(self):
         self.players = {}
+        self.autoplayer = None
         self.session_state = GameSessionState.WAITING_FOR_PLAYERS
         self.db_game = None
         self.start_time = None
@@ -62,10 +80,23 @@ class GameSession():
         self.player_ids = []
 
 
+    def get_other_player_id(self, player_id):
+        if self.autoplayer:
+            if player_id == AUTO:
+                return 1
+            else:
+                return AUTO
+        elif player_id == 1:
+            return 2
+        elif player_id == 2:
+            return 1
+        else:
+            raise Exception(f"Unknown player_id {player_id}")
+
     async def send_message_to_all_players(self, message):
         message_json = json.dumps(message)
         await asyncio.wait([
-            asyncio.create_task(p.websocket.send(message_json)) for p in self.players.values()])
+            asyncio.create_task(p.websocket.send(message_json)) for pid, p in self.players.items() if pid != AUTO])
 
     async def send_message_to_client(self, message, websocket):
         message_json = json.dumps(message)
@@ -73,14 +104,14 @@ class GameSession():
             asyncio.create_task(websocket.send(message_json))])
 
     async def send_message_to_other_player(self, message, player_id):
-        other_id = get_other_player_id(player_id)
-        if other_id in self.players:
+        other_id = self.get_other_player_id(player_id)
+        if other_id in self.players and other_id != AUTO:
             websocket = self.players[other_id].websocket
             await self.send_message_to_client(message, websocket)
 
     async def register_player(self, websocket) -> int:
-        if self.session_state!=GameSessionState.WAITING_FOR_PLAYERS:
-            raise Exception("This game is already full.")
+        # if self.session_state!=GameSessionState.WAITING_FOR_PLAYERS:
+        #     raise Exception("This game is already full.")
 
         player = GamePlayer(websocket)
 
@@ -94,19 +125,28 @@ class GameSession():
 
         self.players[player_id] = player
 
-        if len(self.players)==2:
+        if len(self.players) == 2 or self.autoplayer:
             self.session_state=GameSessionState.GUESSING
-            self.player_ids = list(self.players.keys())
-            self.game_id = list(SESSIONS.keys())[-1]
+            self.player_ids += list(self.players.keys())
+            if self.autoplayer:
+                self.players[AUTO] = self.autoplayer
+            self.game_id = SH.last_session_id()
             await self.new_puzzle()
 
-        return len(self.players)
+        return player_id
 
     async def unregister_player(self, player_id):
         if self.session_state==GameSessionState.GUESSING:
             self.session_state = GameSessionState.GAME_ABANDONED
         await self.send_message_to_other_player({"type": "other_player_abandoned_game"}, player_id)
         del self.players[player_id]
+
+    async def unregister_autoplayer(self):
+        if AUTO in self.player_ids:
+            del self.players[AUTO]
+            self.player_ids.remove(AUTO)
+            self.autoplayer = None
+            # TODO: Send message to restart clock
 
     def is_empty(self):
         return len(self.players)==0
@@ -115,6 +155,8 @@ class GameSession():
         """Send puzzle to users"""
         self.puzzle_id, self.words = PUZZLES[randrange(0, N_PUZZLES)]
         await self.send_message_to_all_players({"type": "words", "words": self.words})
+        if self.autoplayer:
+            await self.autoplayer.generate_guesses(self.puzzle_id)
         self.start_time = datetime.now()
         self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
                                       user1=self.player_ids[0], user2=self.player_ids[1], guess='')
@@ -130,7 +172,7 @@ class GameSession():
 
         a = db.Answer.create(game=self.db_game, cluster_id=self.puzzle_id, user=player_id, word=guess, e_time=elapsed_time)
 
-        other_player_id = get_other_player_id(player_id)
+        other_player_id = self.get_other_player_id(player_id)
 
         if guess in self.players[other_player_id].guesses:
             self.session_state = GameSessionState.WON
@@ -154,18 +196,25 @@ async def serve_queue(websocket):
             data = json.loads(message)
             if data["action"] == "play":
                 # Create unique id for each GameSession.
-                if len(SESSIONS) == 0:
+                if len(SH.sessions) == 0:
                     session_id = str(uuid.uuid1())
-                elif len(list(SESSIONS.values())[-1].players) < 2:
-                    session_id = list(SESSIONS.keys())[-1]
+                elif len(SH.real_player_ids_of_last_sess()) == 1:
+                    print("Replace AutoPlayer.")
+                    session_id = SH.last_session_id()
+                    await SH.remove_auto_if_exists()
                 else:
                     session_id = str(uuid.uuid1())
 
-                if session_id not in SESSIONS:
+                if session_id not in SH.sessions:
                     print("creating new session", session_id)
-                    SESSIONS[session_id] = GameSession()
+                    SH.sessions[session_id] = GameSession()
 
-                game_session = SESSIONS[session_id]
+                if len(SH.real_player_ids_of_last_sess()) == 0:
+                    print("Add AutoPlayer")
+                    SH.sessions[session_id].autoplayer = AutoPlayer(websocket)
+                    SH.sessions[session_id].player_ids.append(AUTO)
+
+                game_session = SH.sessions[session_id]
                 print('Queue sends session_id:', session_id)
                 await game_session.send_message_to_client({"type": "session", "session_id": session_id},
                                                           websocket)
@@ -177,7 +226,7 @@ async def serve_queue(websocket):
 
 async def serve_game_session(websocket, session_id):
     print('GAME')
-    game_session = SESSIONS[session_id]
+    game_session = SH.sessions[session_id]
     player_id = await game_session.register_player(websocket)
     try:
         async for message in websocket:
@@ -190,10 +239,10 @@ async def serve_game_session(websocket, session_id):
     except websockets.exceptions.ConnectionClosedError as err:
         print('Game server error:', str(err), 'Player', player_id)    # client went away
     finally:
-        print('Game finally', list(SESSIONS.keys()), "Player", player_id)
+        print('Game finally', list(SH.sessions.keys()), "Player", player_id)
         await game_session.unregister_player(player_id)
-        if session_id in SESSIONS.keys():
-            del SESSIONS[session_id]
+        if session_id in SH.sessions.keys():
+            del SH.sessions[session_id]
 
 
 async def server(websocket, path):
