@@ -52,7 +52,7 @@ function App() {
   const [sessionId, setSessionId] = useState<string|null>(null);
   const [dialogText, setDialogText] = useState<DialogText>({title: "Matched with", text: ''});
   const [showTimer, setShowTimer] = useState<boolean>(false);
-  const [time, setTime] = useState<number>(10);
+  const [time, setTime] = useState<number>(40);
 
   const showDialog = () => setMatchDialogue(true);
   const hideDialog = () => setTimeout(() => setMatchDialogue(false),1500);
@@ -77,7 +77,7 @@ function App() {
                       hideDialog();
                       setWords(data.words);
                       setShowTimer(false);
-                      setTime(10);
+                      setTime(40);
                       showDelayedTimer();
                       break;
                   case 'score':

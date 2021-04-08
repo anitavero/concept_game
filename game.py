@@ -33,17 +33,26 @@ class AutoPlayer():
 
     def __init__(self):
         self.guesses = set()
-# TODO: stop generation if player left
+    # TODO: stop generation if player left or new puzzle comes
     async def generate_guesses(self, cluster_id, db_game):
-        guesses = read_tables.select_answers_by_cluster_id(cluster_id)
-        print('Generate guesses', len(guesses))
-        for user, guess, etime in guesses:
-            elapsed_time = timedelta(seconds=etime.second, microseconds=etime.microsecond).total_seconds()
-            sleep(elapsed_time)
-            self.guesses.add(guess)
-            a = db.Answer.create(game=db_game, cluster_id=cluster_id, user=AUTO, word=guess,
-                                 e_time=elapsed_time)
-            print('AUTO guess:', self.guesses, etime)
+        answers = read_tables.select_answers_by_cluster_id(cluster_id)
+        if answers:
+            games = list(set((a.game for a in answers)))
+            rand_game = games[randrange(0, len(games))]
+            g_answers = [a for a in answers if a.game == rand_game]
+
+            print(f'Generate {len(g_answers)} guesses')
+            elapsed_time = timedelta(seconds=0, microseconds=0)
+            for a in g_answers:
+                p_elapsed_time = elapsed_time
+                elapsed_time = timedelta(seconds=a.e_time.second, microseconds=a.e_time.microsecond)
+                sleep((elapsed_time - p_elapsed_time).total_seconds())
+                self.guesses.add(a.word)
+                a = db.Answer.create(game=db_game, cluster_id=cluster_id, user=AUTO, word=a.word,
+                                     e_time=elapsed_time)
+                print('AUTO guess:', self.guesses, a.e_time)
+        else:
+            print('No answers yet', answers)
 
 
 class SessionHandler():
@@ -178,8 +187,9 @@ class GameSession():
 
         print(self.puzzle_id, guess, elapsed_time)
 
-
-        a = db.Answer.create(game=self.db_game, cluster_id=self.puzzle_id, user=player_id, word=guess, e_time=elapsed_time)
+        if not timeout:
+            a = db.Answer.create(game=self.db_game, cluster_id=self.puzzle_id, user=player_id,
+                                 word=guess, e_time=elapsed_time)
 
         other_player_id = self.get_other_player_id(player_id)
 
