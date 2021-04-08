@@ -35,10 +35,11 @@ class AutoPlayer():
         self.guesses = set()
 
     async def generate_guesses(self, cluster_id, db_game):
+        """Replays guesses of BOTH users from a random game for the given cluster_id."""
         answers = read_tables.select_answers_by_cluster_id(cluster_id)
         if answers:
             games = list(set((a.game for a in answers)))
-            rand_game = games[randrange(0, len(games))]
+            rand_game = games[randrange(0, len(games))]     # Select one game randomly
             g_answers = [a for a in answers if a.game == rand_game]
 
             print(f'Generate {len(g_answers)} guesses')
