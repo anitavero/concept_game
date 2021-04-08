@@ -12,6 +12,11 @@ def read_games():
     return games
 
 
+def select_answers_by_cluster_id(cluster_id):
+    ans = db.Answer.select().where(db.Answer.cluster_id == cluster_id)
+    return [(a.user, a.word, a.e_time) for a in ans if a.user != 'AUTO']
+
+
 @arg('-fields', '--fields', nargs='+', type=str, default=None, required=True,
      help='Choose from {game_id, start_time, cluster_id, user1, user2, guess, answers}')
 def print_games(fields=None):

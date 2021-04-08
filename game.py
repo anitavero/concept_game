@@ -7,13 +7,14 @@ import json
 import logging
 import websockets
 from random import randrange
-from datetime import datetime
+from datetime import datetime, timedelta
+from time import sleep
 from collections import OrderedDict
 import uuid
 
 import enum
 
-from concept_game_backend import db
+from concept_game_backend import db, read_tables
 
 PUZZLES = []
 for c in db.Cluster.select():
@@ -43,9 +44,16 @@ class AutoPlayer():
     def __init__(self):
         self.guesses = set()
 
-    async def generate_guesses(self, cluster_id):
-        self.guesses = {'autoguess', cluster_id}
-        print(self.guesses)
+    async def generate_guesses(self, cluster_id, db_game):
+        guesses = read_tables.select_answers_by_cluster_id(cluster_id)
+        print('Generate guesses', len(guesses))
+        for user, guess, etime in guesses:
+            elapsed_time = timedelta(seconds=etime.second, microseconds=etime.microsecond).total_seconds()
+            sleep(elapsed_time)
+            self.guesses.add(guess)
+            a = db.Answer.create(game=db_game, cluster_id=cluster_id, user=AUTO, word=guess,
+                                 e_time=elapsed_time)
+            print('AUTO guess:', self.guesses, etime)
 
 
 class SessionHandler():
@@ -150,7 +158,7 @@ class GameSession():
             self.autoplayer = AutoPlayer()
             self.player_ids.append(AUTO)
             self.players[AUTO] = self.autoplayer
-            await self.autoplayer.generate_guesses(self.puzzle_id)
+            await self.autoplayer.generate_guesses(self.puzzle_id, self.db_game)
             self.score = 0
 
     async def unregister_autoplayer(self):
@@ -169,11 +177,11 @@ class GameSession():
         """Send puzzle to users"""
         self.puzzle_id, self.words = PUZZLES[randrange(0, N_PUZZLES)]
         await self.send_message_to_all_players({"type": "words", "words": self.words})
-        if self.autoplayer:
-            await self.autoplayer.generate_guesses(self.puzzle_id)
         self.start_time = datetime.now()
         self.db_game = db.Game.create(game_id=self.game_id, start_time=self.start_time, cluster_id=self.puzzle_id,
                                       user1=self.player_ids[0], user2=self.player_ids[1], guess='')
+        if self.autoplayer:
+            await self.autoplayer.generate_guesses(self.puzzle_id, self.db_game)
 
     async def add_guess(self, player_id, guess):
         time = datetime.now()
