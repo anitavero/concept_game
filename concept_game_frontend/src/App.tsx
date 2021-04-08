@@ -52,7 +52,7 @@ function App() {
   const [sessionId, setSessionId] = useState<string|null>(null);
   const [dialogText, setDialogText] = useState<DialogText>({title: "Matched with", text: ''});
   const [showTimer, setShowTimer] = useState<boolean>(false);
-  const [time, setTime] = useState<number>(40);
+  const [time, setTime] = useState<number>(10);
 
   const showDialog = () => setMatchDialogue(true);
   const hideDialog = () => setTimeout(() => setMatchDialogue(false),1500);
@@ -77,17 +77,22 @@ function App() {
                       hideDialog();
                       setWords(data.words);
                       setShowTimer(false);
-                      setTime(40);
+                      setTime(10);
                       showDelayedTimer();
                       break;
                   case 'score':
                       setShowTimer(false);
                       setScore(data.score);
-                      if(data.match != 'timeout') {
-                          setDialogText({title: "Matched with", text: data.match});
-                          showDialog();
-                      }
+                      // if(data.match != 'timeout') {
+                      setDialogText({title: "Matched with", text: data.match});
+                      showDialog();
+                      // }
                       setMatch(true);
+                      break;
+                  case 'timeout':
+                      setShowTimer(false);
+                      setMatch(true);
+                      console.log('TIMEOUT', data)
                       break;
                   case 'other_player_abandoned_game':
                       // setReadyToGuess(false);
@@ -143,7 +148,7 @@ function App() {
       console.log("TIME", curTime);
       if(curTime == 0 && ws.current){
           ws.current.send(
-              JSON.stringify({'action': 'guess', 'guess': "TIMEOUT"}));
+              JSON.stringify({'action': 'timeout'}));
       }
   }
 

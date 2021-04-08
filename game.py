@@ -33,7 +33,7 @@ class AutoPlayer():
 
     def __init__(self):
         self.guesses = set()
-
+# TODO: stop generation if player left
     async def generate_guesses(self, cluster_id, db_game):
         guesses = read_tables.select_answers_by_cluster_id(cluster_id)
         print('Generate guesses', len(guesses))
@@ -166,7 +166,11 @@ class GameSession():
         if self.autoplayer:
             await self.autoplayer.generate_guesses(self.puzzle_id, self.db_game)
 
-    async def add_guess(self, player_id, guess):
+    async def add_guess(self, player_id, guess, timeout):
+        if timeout:
+            await self.send_message_to_all_players({"type": "timeout"})
+            guess = 'TIMEOUT'
+
         time = datetime.now()
         guess = guess.lower().strip()
         elapsed_time = time - self.start_time
@@ -179,13 +183,16 @@ class GameSession():
 
         other_player_id = self.get_other_player_id(player_id)
 
+        match = False
         if guess in self.players[other_player_id].guesses:
-            if guess != 'pass' and guess != 'timeout':
+            match = True
+            if guess != 'pass':
                 self.score += 1
             await self.send_message_to_all_players({"type": "score", "score": self.score, "match": guess})
             self.db_game.guess = guess
             self.db_game.save()
 
+        if match or timeout:
             # New puzzle
             for pid in self.players.keys():
                 self.players[pid].guesses = set()  # Clear guesses for new puzzle
@@ -237,7 +244,9 @@ async def serve_game_session(websocket, session_id):
             print("Player", player_id, message)
             data = json.loads(message)
             if data["action"] == "guess":
-                await game_session.add_guess(player_id, data["guess"])
+                await game_session.add_guess(player_id, data["guess"], False)
+            elif data["action"] == "timeout":
+                await game_session.add_guess(player_id, '', True)
             else:
                 logging.error(f"unsupported event: {data}")
     except websockets.exceptions.ConnectionClosedError as err:
