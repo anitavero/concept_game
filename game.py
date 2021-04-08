@@ -33,7 +33,7 @@ class AutoPlayer():
 
     def __init__(self):
         self.guesses = set()
-    # TODO: stop generation if player left or new puzzle comes
+
     async def generate_guesses(self, cluster_id, db_game):
         answers = read_tables.select_answers_by_cluster_id(cluster_id)
         if answers:
@@ -52,7 +52,7 @@ class AutoPlayer():
                                      e_time=elapsed_time)
                 print('AUTO guess:', self.guesses, a.e_time)
         else:
-            print('No answers yet', answers)
+            print('No answers for this cluster yet')
 
 
 class SessionHandler():
@@ -145,7 +145,7 @@ class GameSession():
         await self.send_message_to_other_player({"type": "other_player_abandoned_game"}, player_id)
         del self.players[player_id]
         self.player_ids.remove(player_id)
-        if len(self.players) > 0:
+        if len([p for p in self.players if p != AUTO]) > 0:
             print("Add AutoPlayer")
             self.autoplayer = AutoPlayer()
             self.player_ids.append(AUTO)
@@ -160,7 +160,8 @@ class GameSession():
             self.autoplayer = None
             # Send message about human player
             self.score = 0
-            await self.send_message_to_all_players({"type": "human_player"})
+            if self.player_ids:
+                await self.send_message_to_all_players({"type": "human_player"})
 
     def is_empty(self):
         return len(self.players)==0
@@ -264,6 +265,7 @@ async def serve_game_session(websocket, session_id):
     finally:
         print('Game finally', list(SH.sessions.keys()), "Player", player_id)
         await game_session.unregister_player(player_id)
+        await game_session.unregister_autoplayer()
         if session_id in SH.sessions.keys() and SH.sessions[session_id].player_ids == []:
             del SH.sessions[session_id]
 
