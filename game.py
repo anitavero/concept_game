@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-# WS server example that synchronizes state across clients
 import os
 import asyncio
 import json
@@ -12,9 +10,8 @@ from time import sleep
 from collections import OrderedDict
 import uuid
 
-import enum
-
 from concept_game_backend import db, read_tables
+
 
 PUZZLES = []
 for c in db.Cluster.select():
@@ -23,13 +20,6 @@ N_PUZZLES = len(PUZZLES)
 
 
 logging.basicConfig()
-
-
-class GameSessionState(enum.Enum):
-    WAITING_FOR_PLAYERS = 1
-    GUESSING = 2
-    WON = 3
-    GAME_ABANDONED = 4
 
 
 class GamePlayer():
@@ -81,7 +71,6 @@ class GameSession():
     def __init__(self):
         self.players = {}
         self.autoplayer = None
-        self.session_state = GameSessionState.WAITING_FOR_PLAYERS
         self.db_game = None
         self.start_time = None
         self.puzzle_id = ''
@@ -121,9 +110,6 @@ class GameSession():
             await self.send_message_to_client(message, websocket)
 
     async def register_player(self, websocket) -> int:
-        # if self.session_state!=GameSessionState.WAITING_FOR_PLAYERS:
-        #     raise Exception("This game is already full.")
-
         player = GamePlayer(websocket)
 
         # TODO: player_id should be IP address or sth
@@ -137,7 +123,6 @@ class GameSession():
         self.players[player_id] = player
 
         if len(self.players) == 2 or self.autoplayer:
-            # self.session_state=GameSessionState.GUESSING
             self.player_ids += list(self.players.keys())
             self.player_ids = list(set(self.player_ids))
             if self.autoplayer:
@@ -148,8 +133,6 @@ class GameSession():
         return player_id
 
     async def unregister_player(self, player_id):
-        # if self.session_state==GameSessionState.GUESSING:
-        #     self.session_state = GameSessionState.GAME_ABANDONED
         await self.send_message_to_other_player({"type": "other_player_abandoned_game"}, player_id)
         del self.players[player_id]
         self.player_ids.remove(player_id)
@@ -197,7 +180,6 @@ class GameSession():
         other_player_id = self.get_other_player_id(player_id)
 
         if guess in self.players[other_player_id].guesses:
-            self.session_state = GameSessionState.WON
             if guess != 'pass' and guess != 'timeout':
                 self.score += 1
             await self.send_message_to_all_players({"type": "score", "score": self.score, "match": guess})
